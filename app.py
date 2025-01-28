@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from twilio.twiml.messaging_response import MessagingResponse
 from googletrans import Translator
 import logging
@@ -12,42 +12,41 @@ logging.basicConfig(level=logging.DEBUG)
 # Define the /sms route with POST method
 @app.route('/sms', methods=['POST'])
 def sms_reply():
-    # Log the incoming request data for debugging
-    app.logger.debug(f"Request data: {request.form}")
-
     # Get the message body from the request
     body = request.form.get('Body')
-    # Get the target language (optional)
-    target_lang = request.form.get('Lang', 'en').lower()  # Default to English
-
+    
     # If the Body is missing, return a 400 Bad Request error
     if not body:
         app.logger.warning("Body parameter is missing.")
         return jsonify({"error": "Body parameter is required"}), 400
 
-    # Initialize the Google Translator
-    translator = Translator()
-
     try:
-        # Translate the incoming message to the specified language
-        translated = translator.translate(body, src='auto', dest=target_lang)
+        # Initialize the Google Translator
+        translator = Translator()
 
-        # Create a Twilio MessagingResponse
-        response = MessagingResponse()
-        response.message(f"Translated to {target_lang}: {translated.text}")
+        # Detect the language of the input text
+        detected = translator.detect(body)
+        detected_lang = detected.lang
 
-        # Return the response as a string
-        return str(response), 200
+        # Translate the incoming message to English
+        translated = translator.translate(body, src='auto', dest='en')
+
+        # Return the detected language and translated text
+        return jsonify({
+            "detected_language": detected_lang,
+            "translated_text": translated.text
+        }), 200
 
     except Exception as e:
         # Log the error and return a friendly message
         app.logger.error(f"Error occurred: {str(e)}")
         return jsonify({"error": "An error occurred during translation"}), 500
 
-# Default route for testing
+
+# Serve the web interface
 @app.route('/')
 def home():
-    return "Welcome to the SMS Translator API with multi-language support!"
+    return render_template('index.html')
 
 # Run the app if executed directly
 if __name__ == '__main__':
