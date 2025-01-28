@@ -2,12 +2,18 @@ from flask import Flask, request, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from googletrans import Translator
 import logging
+import os
 
 # Initialize the Flask app
 app = Flask(__name__)
 
 # Set up logging for debugging
 logging.basicConfig(level=logging.DEBUG)
+
+# Root endpoint for testing
+@app.route('/')
+def index():
+    return "Welcome to the SMS Translator API!"
 
 # Define the /sms route with POST method
 @app.route('/sms', methods=['POST'])
@@ -42,7 +48,7 @@ def sms_reply():
         app.logger.error(f"Error occurred: {str(e)}")
         return jsonify({"error": "An error occurred during translation"}), 500
 
-
 # Run the app if executed directly
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))  # Use PORT env var or default to 5000
+    app.run(debug=True, host='0.0.0.0', port=port)
