@@ -1,35 +1,29 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from googletrans import Translator
-import requests
 
-# Initialize Flask app
+# Initialize the Flask app
 app = Flask(__name__)
 
-# Define a simple route
-@app.route("/")
-def home():
-    return "Flask app is running!"
-
-# Route to handle incoming messages
-@app.route("/sms", methods=["POST"])
+# Define the /sms route with POST method
+@app.route('/sms', methods=['POST'])
 def sms_reply():
-    # Get the incoming message
-    incoming_msg = request.form.get("Body")
-    
-    # Initialize response
-    resp = MessagingResponse()
-    msg = resp.message()
-    
-    if incoming_msg:
-        translator = Translator()
-        translated_msg = translator.translate(incoming_msg, dest="en").text
-        msg.body(f"Translated to English: {translated_msg}")
-    else:
-        msg.body("No message received.")
+    # Get the message body from the request
+    body = request.form.get('Body')
 
-    return str(resp)
+    # Initialize the Google Translator
+    translator = Translator()
 
-# Run the app
-if __name__ == "__main__":
+    # Translate the incoming message to English
+    translated = translator.translate(body, src='auto', dest='en')
+
+    # Create a Twilio MessagingResponse
+    response = MessagingResponse()
+    response.message(f"Translated to English: {translated.text}")
+
+    # Return the response as a string
+    return str(response)
+
+# Run the app if executed directly
+if __name__ == '__main__':
     app.run(debug=True)
