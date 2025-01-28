@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from googletrans import Translator
 import logging
@@ -12,7 +12,10 @@ logging.basicConfig(level=logging.DEBUG)
 # Define the /sms route with POST method
 @app.route('/sms', methods=['POST'])
 def sms_reply():
-    # Get the message body from the request
+    # Log the incoming request data for debugging
+    app.logger.debug(f"Request data: {request.form}")
+
+    # Check if the 'Body' parameter exists in the request
     body = request.form.get('Body')
     
     # If the Body is missing, return a 400 Bad Request error
@@ -24,26 +27,22 @@ def sms_reply():
         # Initialize the Google Translator
         translator = Translator()
 
-        # Detect the language of the input text
-        detected = translator.detect(body)
-        detected_lang = detected.lang
-
         # Translate the incoming message to English
         translated = translator.translate(body, src='auto', dest='en')
 
-        # Return the detected language and translated text
-        return jsonify({
-            "detected_language": detected_lang,
-            "translated_text": translated.text
-        }), 200
+        # Create a Twilio MessagingResponse
+        response = MessagingResponse()
+        response.message(f"Translated to English: {translated.text}")
+
+        # Return the response as a string
+        return str(response), 200
 
     except Exception as e:
         # Log the error and return a friendly message
         app.logger.error(f"Error occurred: {str(e)}")
         return jsonify({"error": "An error occurred during translation"}), 500
 
-
-# Serve the web interface
+# Define the homepage route which renders the HTML template
 @app.route('/')
 def home():
     return render_template('index.html')
