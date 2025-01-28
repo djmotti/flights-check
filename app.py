@@ -12,13 +12,13 @@ logging.basicConfig(level=logging.DEBUG)
 # Define the /sms route with POST method
 @app.route('/sms', methods=['POST'])
 def sms_reply():
-    # Log the incoming request data
+    # Log the incoming request data for debugging
     app.logger.debug(f"Request data: {request.form}")
 
-    # Get the message body from the request
+    # Check if the 'Body' parameter exists in the request
     body = request.form.get('Body')
-
-    # Check if the 'Body' parameter is missing
+    
+    # If the Body is missing, return a 400 Bad Request error
     if not body:
         app.logger.warning("Body parameter is missing.")
         return jsonify({"error": "Body parameter is required"}), 400
@@ -45,4 +45,4 @@ def sms_reply():
 
 # Run the app if executed directly
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
