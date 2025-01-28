@@ -1,19 +1,29 @@
 from flask import Flask, request, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from googletrans import Translator
+import logging
 
 # Initialize the Flask app
 app = Flask(__name__)
 
+# Set up logging for debugging
+logging.basicConfig(level=logging.DEBUG)
+
 # Define the /sms route with POST method
 @app.route('/sms', methods=['POST'])
 def sms_reply():
-    try:
-        # Get the message body from the request
-        body = request.form.get('Body')
-        if not body:
-            return jsonify({"error": "Body parameter is missing"}), 400
+    # Log the incoming request data
+    app.logger.debug(f"Request data: {request.form}")
 
+    # Get the message body from the request
+    body = request.form.get('Body')
+
+    # Check if the 'Body' parameter is missing
+    if not body:
+        app.logger.warning("Body parameter is missing.")
+        return jsonify({"error": "Body parameter is required"}), 400
+
+    try:
         # Initialize the Google Translator
         translator = Translator()
 
@@ -28,8 +38,10 @@ def sms_reply():
         return str(response), 200
 
     except Exception as e:
-        # Handle any errors and return a friendly message
-        return jsonify({"error": str(e)}), 500
+        # Log the error and return a friendly message
+        app.logger.error(f"Error occurred: {str(e)}")
+        return jsonify({"error": "An error occurred during translation"}), 500
+
 
 # Run the app if executed directly
 if __name__ == '__main__':
