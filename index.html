@@ -3,71 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Language Detector & Translator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            text-align: center;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin: 10px 0;
-            padding: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .output {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-    </style>
+    <title>SMS Translator API</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Language Detector & Translator</h1>
-        <form id="translatorForm">
-            <textarea id="inputText" placeholder="Type your message here..."></textarea>
-            <button type="button" onclick="translate()">Translate</button>
-        </form>
-        <div class="output" id="output">
-            <p>Detected Language: <span id="language"></span></p>
-            <p>Translated Text: <span id="translation"></span></p>
-        </div>
-    </div>
-    <script>
-        async function translate() {
-            const text = document.getElementById("inputText").value;
-
-            const response = await fetch('/sms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `Body=${encodeURIComponent(text)}`
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                document.getElementById("language").textContent = data.detected_language;
-                document.getElementById("translation").textContent = data.translated_text;
-            } else {
-                document.getElementById("output").textContent = "Error: " + data.error;
-            }
-        }
-    </script>
+    <h1>Welcome to the SMS Translator API!</h1>
+    <form action="/sms" method="POST">
+        <label for="body">Message to Translate:</label><br>
+        <input type="text" id="body" name="Body" required><br><br>
+        <input type="submit" value="Send SMS">
+    </form>
 </body>
 </html>
