@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from googletrans import Translator
+import os
 import logging
 
 # Initialize the Flask app
@@ -49,4 +50,5 @@ def home():
 
 # Run the app if executed directly
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
