@@ -1,5 +1,5 @@
-Flask
-gunicorn
-twilio>=6.0.0
-langdetect
+Flask==2.3.2
 googletrans==4.0.0-rc1
+langdetect==1.0.9
+twilio==6.63.2
+gunicorn==20.1.0
