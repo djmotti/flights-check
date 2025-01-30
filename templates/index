@@ -1,1 +1,16 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Translator API</title>
+</head>
+<body>
+    <h1>Welcome to the SMS Translator API!</h1>
+    <form action="/sms" method="POST">
+        <label for="body">Message to Translate:</label><br>
+        <input type="text" id="body" name="Body" required><br><br>
+        <input type="submit" value="Send SMS">
+    </form>
+</body>
+</html>
