@@ -1,54 +1,74 @@
-from flask import Flask, render_template, request, jsonify
-from twilio.twiml.messaging_response import MessagingResponse
+from flask import Flask, request, render_template, jsonify
 from googletrans import Translator
+from langdetect import detect
+from twilio.rest import Client
 import os
-import logging
 
-# Initialize the Flask app
 app = Flask(__name__)
 
-# Set up logging for debugging
-logging.basicConfig(level=logging.DEBUG)
+# Twilio configuration (replace with your actual credentials or set as environment variables)
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "your_account_sid")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "your_auth_token")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "your_twilio_phone_number")
 
-# Define the /sms route with POST method
-@app.route('/sms', methods=['POST'])
-def sms_reply():
-    # Log the incoming request data for debugging
-    app.logger.debug(f"Request data: {request.form}")
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-    # Check if the 'Body' parameter exists in the request
-    body = request.form.get('Body')
-    
-    # If the Body is missing, return a 400 Bad Request error
-    if not body:
-        app.logger.warning("Body parameter is missing.")
-        return jsonify({"error": "Body parameter is required"}), 400
+# Translator instance
+translator = Translator()
 
+@app.route("/", methods=["GET"])
+def home():
     try:
-        # Initialize the Google Translator
-        translator = Translator()
-
-        # Translate the incoming message to English
-        translated = translator.translate(body, src='auto', dest='en')
-
-        # Create a Twilio MessagingResponse
-        response = MessagingResponse()
-        response.message(f"Translated to English: {translated.text}")
-
-        # Return the response as a string
-        return str(response), 200
-
+        return render_template("index.html")
     except Exception as e:
-        # Log the error and return a friendly message
-        app.logger.error(f"Error occurred: {str(e)}")
+        app.logger.error(f"Error rendering index.html: {e}")
+        return "Error loading the home page.", 500
+
+@app.route("/translate", methods=["POST"])
+def translate_message():
+    try:
+        data = request.get_json()
+        message = data.get("message")
+        target_language = data.get("target_language", "en")
+
+        if not message:
+            return jsonify({"error": "Message is required"}), 400
+
+        # Detect the language of the message
+        detected_language = detect(message)
+
+        # Translate the message
+        translated = translator.translate(message, src=detected_language, dest=target_language)
+        return jsonify({
+            "original_message": message,
+            "detected_language": detected_language,
+            "translated_message": translated.text,
+            "target_language": target_language
+        })
+    except Exception as e:
+        app.logger.error(f"Error translating message: {e}")
         return jsonify({"error": "An error occurred during translation"}), 500
 
-# Define the homepage route which renders the HTML template
-@app.route('/')
-def home():
-    return render_template('index.html')
+@app.route("/send_sms", methods=["POST"])
+def send_sms():
+    try:
+        data = request.get_json()
+        to_number = data.get("to_number")
+        message = data.get("message")
 
-# Run the app if executed directly
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+        if not to_number or not message:
+            return jsonify({"error": "Both 'to_number' and 'message' are required"}), 400
+
+        # Send SMS
+        sms = client.messages.create(
+            body=message,
+            from_=TWILIO_PHONE_NUMBER,
+            to=to_number
+        )
+        return jsonify({"message_sid": sms.sid, "status": "Message sent successfully"})
+    except Exception as e:
+        app.logger.error(f"Error sending SMS: {e}")
+        return jsonify({"error": "An error occurred while sending SMS"}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
