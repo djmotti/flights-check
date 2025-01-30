@@ -1,5 +1,3 @@
-flask
-twilio
+Flask==2.3.2
 googletrans==4.0.0-rc1
-requests
-gunicorn
+twilio==7.18.0
